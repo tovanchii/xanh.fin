@@ -1,0 +1,511 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>XanhFin - Quản Lý Tài Chính Tài Xế Xanh SM</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Font Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        /* Ẩn thanh cuộn nhưng vẫn cuộn mượt */
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+    </style>
+</head>
+<body id="body-root" class="bg-[#090E1A] text-[#F8FAFC] flex justify-center items-center h-[100dvh] overflow-hidden select-none transition-colors duration-300">
+
+    <!-- KHUNG ĐIỆN THOẠI CHUẨN (Mobile Shell) -->
+    <div id="app-container" class="w-full max-w-md h-[100dvh] flex flex-col overflow-hidden relative bg-[#0F172A] border-x border-[#1E293B] shadow-2xl transition-colors duration-300">
+        
+        <!-- HEADER CỐ ĐỊNH -->
+        <header id="header-bg" class="shrink-0 px-4 pt-3 pb-2.5 border-b border-[#1E293B] bg-[#0F172A]/95 backdrop-blur z-20 flex items-center justify-between transition-colors duration-300">
+            <div class="flex items-center gap-2">
+                <div id="header-dot" class="w-2.5 h-2.5 rounded-full bg-[#2DD4BF]"></div>
+                <span class="font-bold text-sm tracking-tight">XanhFin Pro</span>
+            </div>
+            <!-- BỘ CHUYỂN ĐỔI 3 THEME -->
+            <div id="theme-switcher-bg" class="flex items-center p-1 rounded-2xl bg-[#1E293B] gap-0.5">
+                <button onclick="setTheme('light')" id="btn-theme-light" class="flex items-center gap-1 px-2.5 py-1 rounded-xl text-[11px] font-semibold text-[#94A3B8] transition">
+                    <i data-lucide="sun" class="w-3 h-3"></i><span>Sáng</span>
+                </button>
+                <button onclick="setTheme('gold')" id="btn-theme-gold" class="flex items-center gap-1 px-2.5 py-1 rounded-xl text-[11px] font-semibold text-[#94A3B8] transition">
+                    <i data-lucide="crown" class="w-3 h-3"></i><span>Hoàng Kim</span>
+                </button>
+                <button onclick="setTheme('navy')" id="btn-theme-navy" class="flex items-center gap-1 px-2.5 py-1 rounded-xl text-[11px] font-semibold bg-[#334155] text-[#2DD4BF] border border-[#475569] transition">
+                    <i data-lucide="moon" class="w-3 h-3"></i><span>Navy Dịu</span>
+                </button>
+            </div>
+        </header>
+
+        <!-- THÔNG BÁO CHỐT CA THÀNH CÔNG -->
+        <div id="toast-banner" class="absolute top-14 left-4 right-4 z-40 pointer-events-none flex justify-center opacity-0 transition-opacity duration-300">
+            <div id="toast-content" class="px-4 py-2.5 rounded-2xl bg-[#2DD4BF] text-[#0F172A] text-xs font-bold flex items-center gap-2 shadow-xl">
+                <i data-lucide="check" class="w-4 h-4 stroke-[3]"></i>
+                <span id="toast-text">Đã chốt ca thành công!</span>
+            </div>
+        </div>
+
+        <!-- VÙNG NỘI DUNG CUỘN ĐỘC LẬP -->
+        <main class="flex-1 overflow-y-auto no-scrollbar px-4 py-3 space-y-3">
+            
+            <!-- ================= TAB 1: CHỐT CA ================= -->
+            <div id="tab-content-close" class="space-y-3">
+                <!-- Thẻ Lợi Nhuận Ròng -->
+                <section id="card-profit" class="rounded-3xl p-5 text-center bg-[#1E293B] border border-[#334155]/60 shadow-sm transition-colors">
+                    <p id="txt-profit-label" class="text-xs font-medium text-[#94A3B8]">Lợi nhuận ròng hôm nay</p>
+                    <div id="val-net-profit" class="text-4xl font-extrabold tracking-tight my-2 text-[#2DD4BF]">0 đ</div>
+                    <div id="badge-safe" class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-[#2DD4BF]/12 text-[#2DD4BF] border border-[#2DD4BF]/25">
+                        <i data-lucide="shield-check" class="w-3.5 h-3.5"></i>
+                        <span id="txt-safe-withdraw">Chưa có dữ liệu chốt ca</span>
+                    </div>
+                </section>
+
+                <!-- Nhập Số Dư Ví Cuối Ca -->
+                <section id="card-wallets" class="rounded-3xl px-4 py-1.5 bg-[#1E293B] border border-[#334155]/60 divide-y divide-[#334155]/60 transition-colors">
+                    <!-- Ví App -->
+                    <div class="py-2.5 flex items-center justify-between gap-2">
+                        <div class="flex items-center gap-2.5 min-w-0">
+                            <i data-lucide="wallet" class="w-4 h-4 text-[#2DD4BF] shrink-0"></i>
+                            <span class="text-sm font-semibold truncate">Ví App Xanh SM</span>
+                        </div>
+                        <div class="flex items-center gap-2 shrink-0">
+                            <button onclick="fillYesterday('app')" id="btn-old-app" class="px-2.5 py-1.5 rounded-xl text-xs font-semibold bg-[#334155]/80 hover:bg-[#475569] text-[#E2E8F0] transition">Cũ</button>
+                            <div id="input-bg-app" class="w-36 flex items-center rounded-xl px-3 py-1.5 bg-[#0F172A] border border-[#334155] focus-within:border-[#2DD4BF] transition">
+                                <input type="text" inputmode="numeric" id="inp-app" placeholder="0" oninput="calculateRealtime()" class="w-full bg-transparent text-right text-base font-bold focus:outline-none text-[#F8FAFC]">
+                                <span class="ml-1 text-xs font-medium text-[#94A3B8]">.000đ</span>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Tiền mặt -->
+                    <div class="py-2.5 flex items-center justify-between gap-2">
+                        <div class="flex items-center gap-2.5 min-w-0">
+                            <i data-lucide="banknote" class="w-4 h-4 text-[#2DD4BF] shrink-0"></i>
+                            <span class="text-sm font-semibold truncate">Tiền mặt trong túi</span>
+                        </div>
+                        <div class="flex items-center gap-2 shrink-0">
+                            <button onclick="fillYesterday('cash')" id="btn-old-cash" class="px-2.5 py-1.5 rounded-xl text-xs font-semibold bg-[#334155]/80 hover:bg-[#475569] text-[#E2E8F0] transition">Cũ</button>
+                            <div id="input-bg-cash" class="w-36 flex items-center rounded-xl px-3 py-1.5 bg-[#0F172A] border border-[#334155] focus-within:border-[#2DD4BF] transition">
+                                <input type="text" inputmode="numeric" id="inp-cash" placeholder="0" oninput="calculateRealtime()" class="w-full bg-transparent text-right text-base font-bold focus:outline-none text-[#F8FAFC]">
+                                <span class="ml-1 text-xs font-medium text-[#94A3B8]">.000đ</span>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- ATM -->
+                    <div class="py-2.5 flex items-center justify-between gap-2">
+                        <div class="flex items-center gap-2.5 min-w-0">
+                            <i data-lucide="credit-card" class="w-4 h-4 text-[#2DD4BF] shrink-0"></i>
+                            <span class="text-sm font-semibold truncate">Tài khoản ATM (chạy xe)</span>
+                        </div>
+                        <div class="flex items-center gap-2 shrink-0">
+                            <button onclick="fillYesterday('atm')" id="btn-old-atm" class="px-2.5 py-1.5 rounded-xl text-xs font-semibold bg-[#334155]/80 hover:bg-[#475569] text-[#E2E8F0] transition">Cũ</button>
+                            <div id="input-bg-atm" class="w-36 flex items-center rounded-xl px-3 py-1.5 bg-[#0F172A] border border-[#334155] focus-within:border-[#2DD4BF] transition">
+                                <input type="text" inputmode="numeric" id="inp-atm" placeholder="0" oninput="calculateRealtime()" class="w-full bg-transparent text-right text-base font-bold focus:outline-none text-[#F8FAFC]">
+                                <span class="ml-1 text-xs font-medium text-[#94A3B8]">.000đ</span>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Phát Sinh & Chi Phí (2 cột) -->
+                <section class="grid grid-cols-2 gap-3">
+                    <div id="card-eat" class="rounded-3xl p-3.5 bg-[#1E293B] border border-[#334155]/60 transition-colors">
+                        <label class="block text-xs font-medium mb-2 text-[#94A3B8]">Chi tiêu ăn uống</label>
+                        <div id="input-bg-eat" class="flex items-center rounded-xl px-3 py-2 bg-[#0F172A] border border-[#334155]">
+                            <input type="text" inputmode="numeric" id="inp-eat" placeholder="0" oninput="calculateRealtime()" class="w-full bg-transparent text-right text-base font-bold focus:outline-none text-[#F8FAFC]">
+                            <span class="ml-1 text-xs font-medium text-[#94A3B8]">.000đ</span>
+                        </div>
+                    </div>
+                    <div id="card-withdraw" class="rounded-3xl p-3.5 bg-[#1E293B] border border-[#334155]/60 transition-colors">
+                        <label class="block text-xs font-medium mb-2 text-[#94A3B8]">Đã rút cất riêng</label>
+                        <div id="input-bg-withdraw" class="flex items-center rounded-xl px-3 py-2 bg-[#0F172A] border border-[#334155]">
+                            <input type="text" inputmode="numeric" id="inp-withdraw" placeholder="0" oninput="calculateRealtime()" class="w-full bg-transparent text-right text-base font-bold focus:outline-none text-[#F8FAFC]">
+                            <span class="ml-1 text-xs font-medium text-[#94A3B8]">.000đ</span>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Nút Xác Nhận Chốt Ca -->
+                <button onclick="confirmShift()" id="btn-confirm" class="w-full py-4 rounded-3xl font-bold text-sm tracking-wide bg-[#2DD4BF] hover:bg-[#14B8A6] text-[#0F172A] shadow-[0_8px_22px_-4px_rgba(45,212,191,0.3)] active:scale-[0.99] transition flex items-center justify-center gap-2">
+                    <i data-lucide="check" class="w-4 h-4 stroke-[2.5]"></i>
+                    <span>Xác Nhận Chốt Ca Hôm Nay</span>
+                </button>
+            </div>
+
+            <!-- ================= TAB 2: SỔ THU CHI ================= -->
+            <div id="tab-content-ledger" class="space-y-3 hidden">
+                <section class="grid grid-cols-2 gap-3">
+                    <div id="card-ledger-1" class="rounded-3xl p-4 bg-[#1E293B] border border-[#334155]/60">
+                        <span class="text-xs font-medium block text-[#94A3B8]">Lợi nhuận tuần này</span>
+                        <span id="stat-week" class="text-xl font-extrabold mt-1 block text-[#2DD4BF]">0 đ</span>
+                    </div>
+                    <div id="card-ledger-2" class="rounded-3xl p-4 bg-[#1E293B] border border-[#334155]/60">
+                        <span class="text-xs font-medium block text-[#94A3B8]">Lợi nhuận tháng này</span>
+                        <span id="stat-month" class="text-xl font-extrabold mt-1 block">0 đ</span>
+                    </div>
+                </section>
+
+                <section id="card-ledger-3" class="rounded-3xl p-4 bg-[#1E293B] border border-[#334155]/60">
+                    <div class="flex items-center justify-between mb-3">
+                        <span class="text-xs font-bold">Lịch sử chốt ca</span>
+                        <span id="stat-count" class="text-xs font-semibold text-[#2DD4BF]">0 ngày làm việc</span>
+                    </div>
+                    <div id="history-list" class="divide-y divide-[#334155]/60 max-h-[280px] overflow-y-auto no-scrollbar">
+                        <p class="py-6 text-center text-xs text-[#94A3B8]">Chưa có lịch sử chốt ca nào.</p>
+                    </div>
+                </section>
+            </div>
+
+            <!-- ================= TAB 3: MỞ RỘNG ================= -->
+            <div id="tab-content-modules" class="space-y-3 hidden">
+                <div class="grid grid-cols-2 gap-3">
+                    <div id="card-mod-1" class="rounded-3xl p-4 bg-[#1E293B] border border-[#334155]/60 flex flex-col justify-between min-h-[120px]">
+                        <i data-lucide="wrench" class="w-5 h-5 text-[#2DD4BF]"></i>
+                        <div>
+                            <p class="text-sm font-bold">Bảo dưỡng ODO</p>
+                            <p class="text-xs mt-0.5 text-[#94A3B8]">2.400 / 3.000 km</p>
+                        </div>
+                    </div>
+                    <div id="card-mod-2" class="rounded-3xl p-4 bg-[#1E293B] border border-[#334155]/60 flex flex-col justify-between min-h-[120px]">
+                        <i data-lucide="award" class="w-5 h-5 text-[#2DD4BF]"></i>
+                        <div>
+                            <p class="text-sm font-bold">Điểm thưởng tuần</p>
+                            <p class="text-xs mt-0.5 text-[#94A3B8]">190 / 220 điểm</p>
+                        </div>
+                    </div>
+                </div>
+                <div id="card-mod-3" class="rounded-3xl p-4 bg-[#1E293B] border border-[#334155]/60 text-center py-6">
+                    <p class="text-sm font-bold">Tính năng mở rộng sắp ra mắt</p>
+                    <p class="text-xs text-[#94A3B8] mt-1">Bạn có thể yêu cầu ghép thêm bất cứ tiện ích nào!</p>
+                </div>
+            </div>
+
+            <!-- ================= TAB 4: CÀI ĐẶT ================= -->
+            <div id="tab-content-settings" class="space-y-3 hidden">
+                <section id="card-set-1" class="rounded-3xl p-4 bg-[#1E293B] border border-[#334155]/60 space-y-3">
+                    <span class="text-sm font-bold block">Số dư đầu ca gốc (Hôm qua)</span>
+                    <div class="grid grid-cols-3 gap-2">
+                        <div class="rounded-2xl p-2.5 bg-[#0F172A] border border-[#334155]">
+                            <span class="text-[11px] block mb-1 text-[#94A3B8]">Ví App</span>
+                            <div class="flex items-baseline">
+                                <input type="text" id="set-yesterday-app" value="200" oninput="saveSettings()" class="w-full bg-transparent text-sm font-bold focus:outline-none text-[#F8FAFC]">
+                                <span class="text-[10px] text-[#94A3B8]">k</span>
+                            </div>
+                        </div>
+                        <div class="rounded-2xl p-2.5 bg-[#0F172A] border border-[#334155]">
+                            <span class="text-[11px] block mb-1 text-[#94A3B8]">Tiền mặt</span>
+                            <div class="flex items-baseline">
+                                <input type="text" id="set-yesterday-cash" value="250" oninput="saveSettings()" class="w-full bg-transparent text-sm font-bold focus:outline-none text-[#F8FAFC]">
+                                <span class="text-[10px] text-[#94A3B8]">k</span>
+                            </div>
+                        </div>
+                        <div class="rounded-2xl p-2.5 bg-[#0F172A] border border-[#334155]">
+                            <span class="text-[11px] block mb-1 text-[#94A3B8]">ATM</span>
+                            <div class="flex items-baseline">
+                                <input type="text" id="set-yesterday-atm" value="550" oninput="saveSettings()" class="w-full bg-transparent text-sm font-bold focus:outline-none text-[#F8FAFC]">
+                                <span class="text-[10px] text-[#94A3B8]">k</span>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <section id="card-set-2" class="rounded-3xl px-4 py-3 bg-[#1E293B] border border-[#334155]/60 flex items-center justify-between gap-3">
+                    <div>
+                        <p class="text-sm font-semibold">Phí cố định / ngày</p>
+                        <p class="text-xs text-[#94A3B8]">Thuê pin, hao mòn, 4G</p>
+                    </div>
+                    <div class="w-32 flex items-center rounded-xl px-3 py-1.5 bg-[#0F172A] border border-[#334155]">
+                        <input type="text" id="set-fixed-cost" value="45" oninput="saveSettings()" class="w-full bg-transparent text-right text-sm font-bold focus:outline-none text-[#F8FAFC]">
+                        <span class="ml-1 text-xs text-[#94A3B8]">.000đ</span>
+                    </div>
+                </section>
+
+                <button onclick="resetData()" class="w-full py-3.5 rounded-3xl text-xs font-semibold bg-[#334155]/80 hover:bg-[#475569] text-[#E2E8F0] transition flex items-center justify-center gap-2">
+                    <i data-lucide="rotate-ccw" class="w-3.5 h-3.5"></i>
+                    <span>Khôi phục dữ liệu gốc</span>
+                </button>
+            </div>
+        </main>
+
+        <!-- THANH TAB CỐ ĐỊNH Ở ĐÁY MÀN HÌNH -->
+        <nav id="nav-bg" class="shrink-0 px-3 py-2 bg-[#1E293B] border-t border-[#334155]/80 z-30 transition-colors duration-300">
+            <div class="grid grid-cols-4 gap-1">
+                <button onclick="switchTab('close')" id="nav-btn-close" class="py-2 px-1 rounded-2xl flex flex-col items-center justify-center gap-1 bg-[#2DD4BF]/15 text-[#2DD4BF] transition">
+                    <i data-lucide="wallet" class="w-5 h-5"></i>
+                    <span class="text-[11px] font-semibold leading-none">Chốt Ca</span>
+                </button>
+                <button onclick="switchTab('ledger')" id="nav-btn-ledger" class="py-2 px-1 rounded-2xl flex flex-col items-center justify-center gap-1 text-[#94A3B8] hover:text-[#F8FAFC] transition">
+                    <i data-lucide="bar-chart-3" class="w-5 h-5"></i>
+                    <span class="text-[11px] font-semibold leading-none">Sổ Thu Chi</span>
+                </button>
+                <button onclick="switchTab('modules')" id="nav-btn-modules" class="py-2 px-1 rounded-2xl flex flex-col items-center justify-center gap-1 text-[#94A3B8] hover:text-[#F8FAFC] transition">
+                    <i data-lucide="layout-grid" class="w-5 h-5"></i>
+                    <span class="text-[11px] font-semibold leading-none">Mở Rộng</span>
+                </button>
+                <button onclick="switchTab('settings')" id="nav-btn-settings" class="py-2 px-1 rounded-2xl flex flex-col items-center justify-center gap-1 text-[#94A3B8] hover:text-[#F8FAFC] transition">
+                    <i data-lucide="settings" class="w-5 h-5"></i>
+                    <span class="text-[11px] font-semibold leading-none">Cài Đặt</span>
+                </button>
+            </div>
+        </nav>
+
+    </div>
+
+    <!-- SCRIPT XỬ LÝ TOÀN BỘ GIAO DIỆN & TÀI CHÍNH -->
+    <script>
+        // Khởi tạo Lucide Icons
+        lucide.createIcons();
+
+        // Cấu hình Theme Tokens
+        const THEMES = {
+            light: {
+                outerBg: 'bg-[#E5E9F0]', appBg: 'bg-[#F3F5F8]', headerBg: 'bg-[#F3F5F8]/95 border-[#E2E8F0]',
+                card: 'bg-[#FFFFFF] border border-[#E5E7EB]', inputBg: 'bg-[#F8FAFC] border border-[#E2E8F0]',
+                textMain: 'text-[#111827]', textSub: 'text-[#6B7280]', accentText: 'text-[#059669]',
+                badge: 'bg-[#ECFDF5] text-[#059669] border border-[#A7F3D0]',
+                primaryBtn: 'bg-[#059669] hover:bg-[#047857] text-white',
+                navBg: 'bg-[#FFFFFF] border-t border-[#E5E7EB]', navActive: 'text-[#059669] bg-[#ECFDF5]', navInactive: 'text-[#6B7280]',
+                switcherBg: 'bg-[#E5E9F0]', switcherActive: 'bg-[#FFFFFF] text-[#059669] border border-[#E2E8F0]'
+            },
+            gold: {
+                outerBg: 'bg-[#000000]', appBg: 'bg-[#09090B]', headerBg: 'bg-[#09090B]/95 border-[#27272A]',
+                card: 'bg-[#141417] border border-[#27272A]', inputBg: 'bg-[#09090B] border border-[#27272A]',
+                textMain: 'text-[#FAFAFA]', textSub: 'text-[#A1A1AA]', accentText: 'text-[#FBBF24]',
+                badge: 'bg-[#F59E0B]/12 text-[#FBBF24] border border-[#F59E0B]/25',
+                primaryBtn: 'bg-gradient-to-r from-[#F59E0B] to-[#FBBF24] text-[#09090B]',
+                navBg: 'bg-[#111114] border-t border-[#27272A]', navActive: 'text-[#FBBF24] bg-[#F59E0B]/15', navInactive: 'text-[#71717A]',
+                switcherBg: 'bg-[#141417]', switcherActive: 'bg-[#27272A] text-[#FBBF24] border border-[#3F3F46]'
+            },
+            navy: {
+                outerBg: 'bg-[#090E1A]', appBg: 'bg-[#0F172A]', headerBg: 'bg-[#0F172A]/95 border-[#1E293B]',
+                card: 'bg-[#1E293B] border border-[#334155]/60', inputBg: 'bg-[#0F172A] border border-[#334155]',
+                textMain: 'text-[#F8FAFC]', textSub: 'text-[#94A3B8]', accentText: 'text-[#2DD4BF]',
+                badge: 'bg-[#2DD4BF]/12 text-[#2DD4BF] border border-[#2DD4BF]/25',
+                primaryBtn: 'bg-[#2DD4BF] hover:bg-[#14B8A6] text-[#0F172A]',
+                navBg: 'bg-[#1E293B] border-t border-[#334155]/80', navActive: 'text-[#2DD4BF] bg-[#2DD4BF]/15', navInactive: 'text-[#94A3B8]',
+                switcherBg: 'bg-[#1E293B]', switcherActive: 'bg-[#334155] text-[#2DD4BF] border border-[#475569]'
+            }
+        };
+
+        // State dữ liệu ứng dụng
+        let state = {
+            theme: 'navy',
+            activeTab: 'close',
+            yesterday: { app: 200, cash: 250, atm: 550 },
+            fixedCost: 45,
+            history: []
+        };
+
+        // Chuyển Theme
+        function setTheme(themeKey) {
+            state.theme = themeKey;
+            const t = THEMES[themeKey];
+            
+            document.getElementById('body-root').className = `${t.outerBg} ${t.textMain} flex justify-center items-center h-[100dvh] overflow-hidden select-none transition-colors duration-300`;
+            document.getElementById('app-container').className = `w-full max-w-md h-[100dvh] flex flex-col overflow-hidden relative ${t.appBg} border-x border-[#1E293B] shadow-2xl transition-colors duration-300`;
+            document.getElementById('header-bg').className = `shrink-0 px-4 pt-3 pb-2.5 border-b ${t.headerBg} backdrop-blur z-20 flex items-center justify-between transition-colors duration-300`;
+            document.getElementById('header-dot').className = `w-2.5 h-2.5 rounded-full ${themeKey==='light'?'bg-[#059669]':themeKey==='gold'?'bg-[#FBBF24]':'bg-[#2DD4BF]'}`;
+            
+            // Switcher style
+            document.getElementById('theme-switcher-bg').className = `flex items-center p-1 rounded-2xl ${t.switcherBg} gap-0.5`;
+            ['light', 'gold', 'navy'].forEach(k => {
+                const btn = document.getElementById(`btn-theme-${k}`);
+                if (k === themeKey) {
+                    btn.className = `flex items-center gap-1 px-2.5 py-1 rounded-xl text-[11px] font-semibold ${t.switcherActive} transition`;
+                } else {
+                    btn.className = `flex items-center gap-1 px-2.5 py-1 rounded-xl text-[11px] font-semibold ${t.textSub} transition`;
+                }
+            });
+
+            // Cards & Inputs
+            ['card-profit', 'card-wallets', 'card-eat', 'card-withdraw', 'card-ledger-1', 'card-ledger-2', 'card-ledger-3', 'card-mod-1', 'card-mod-2', 'card-mod-3', 'card-set-1', 'card-set-2'].forEach(id => {
+                const el = document.getElementById(id);
+                if(el) el.className = el.className.replace(/bg-\[#.*?\]/g, '').replace(/border-\[#.*?\]/g, '') + ` ${t.card}`;
+            });
+
+            ['input-bg-app', 'input-bg-cash', 'input-bg-atm', 'input-bg-eat', 'input-bg-withdraw'].forEach(id => {
+                const el = document.getElementById(id);
+                if(el) el.className = el.className.replace(/bg-\[#.*?\]/g, '').replace(/border-\[#.*?\]/g, '') + ` ${t.inputBg}`;
+            });
+
+            document.getElementById('nav-bg').className = `shrink-0 px-3 py-2 ${t.navBg} z-30 transition-colors duration-300`;
+            document.getElementById('btn-confirm').className = `w-full py-4 rounded-3xl font-bold text-sm tracking-wide ${t.primaryBtn} shadow-lg active:scale-[0.99] transition flex items-center justify-center gap-2`;
+
+            updateNavActive();
+            calculateRealtime();
+        }
+
+        // Chuyển Tab
+        function switchTab(tabId) {
+            state.activeTab = tabId;
+            ['close', 'ledger', 'modules', 'settings'].forEach(id => {
+                const content = document.getElementById(`tab-content-${id}`);
+                const btn = document.getElementById(`nav-btn-${id}`);
+                const t = THEMES[state.theme];
+
+                if (id === tabId) {
+                    content.classList.remove('hidden');
+                    btn.className = `py-2 px-1 rounded-2xl flex flex-col items-center justify-center gap-1 ${t.navActive} transition`;
+                } else {
+                    content.classList.add('hidden');
+                    btn.className = `py-2 px-1 rounded-2xl flex flex-col items-center justify-center gap-1 ${t.textSub} hover:${t.textMain} transition`;
+                }
+            });
+            if(tabId === 'ledger') renderHistory();
+        }
+
+        function updateNavActive() {
+            switchTab(state.activeTab);
+        }
+
+        // Hỗ trợ điền nhanh số hôm qua
+        function fillYesterday(walletKey) {
+            const val = state.yesterday[walletKey] || 0;
+            document.getElementById(`inp-${walletKey}`).value = val === 0 ? '' : val;
+            calculateRealtime();
+        }
+
+        // Đọc số nguyên an toàn
+        function getVal(id) {
+            const v = document.getElementById(id).value.replace(/[^0-9]/g, '');
+            return v === '' ? 0 : parseInt(v, 10);
+        }
+
+        // Định dạng tiền tệ
+        function formatMoney(valInK, showPlus = false) {
+            const full = Math.round(valInK * 1000);
+            const str = Math.abs(full).toLocaleString('vi-VN');
+            if (full < 0) return `-${str} đ`;
+            if (showPlus && full > 0) return `+${str} đ`;
+            return `${str} đ`;
+        }
+
+        // Tính toán thời gian thực
+        function calculateRealtime() {
+            const app = getVal('inp-app');
+            const cash = getVal('inp-cash');
+            const atm = getVal('inp-atm');
+            const eat = getVal('inp-eat');
+            const withdraw = getVal('inp-withdraw');
+
+            const todayTotal = app + cash + atm;
+            const yesterdayTotal = state.yesterday.app + state.yesterday.cash + state.yesterday.atm;
+            const fixed = Number(document.getElementById('set-fixed-cost').value) || 45;
+
+            // Công thức ròng: (Tổng cuối - Tổng đầu) + Ăn uống + Rút cất - Phí cố định
+            const net = todayTotal - yesterdayTotal + eat + withdraw - fixed;
+
+            const t = THEMES[state.theme];
+            const netEl = document.getElementById('val-net-profit');
+            netEl.innerText = formatMoney(net, true);
+            netEl.className = `text-4xl font-extrabold tracking-tight my-2 ${net >= 0 ? t.accentText : 'text-rose-500'}`;
+
+            const safeEl = document.getElementById('txt-safe-withdraw');
+            if(todayTotal > 1000) {
+                safeEl.innerText = `An toàn rút cất tối nay: ${formatMoney(todayTotal - 1000)}`;
+            } else {
+                safeEl.innerText = `Duy trì vốn mồi chạy ca`;
+            }
+        }
+
+        // Xác nhận chốt ca
+        function confirmShift() {
+            const app = getVal('inp-app');
+            const cash = getVal('inp-cash');
+            const atm = getVal('inp-atm');
+            const eat = getVal('inp-eat');
+            const withdraw = getVal('inp-withdraw');
+            const todayTotal = app + cash + atm;
+            const yesterdayTotal = state.yesterday.app + state.yesterday.cash + state.yesterday.atm;
+            const fixed = Number(document.getElementById('set-fixed-cost').value) || 45;
+            const net = todayTotal - yesterdayTotal + eat + withdraw - fixed;
+
+            const now = new Date();
+            const dateStr = `${String(now.getDate()).padStart(2,'0')}/${String(now.getMonth()+1).padStart(2,'0')}`;
+
+            const entry = {
+                id: Date.now(),
+                date: dateStr,
+                netProfit: net
+            };
+
+            state.history.unshift(entry);
+
+            // Cập nhật ngày hôm nay thành ngày hôm qua cho ca tiếp theo
+            state.yesterday = { app, cash, atm };
+            document.getElementById('set-yesterday-app').value = app;
+            document.getElementById('set-yesterday-cash').value = cash;
+            document.getElementById('set-yesterday-atm').value = atm;
+
+            // Reset form
+            document.getElementById('inp-app').value = '';
+            document.getElementById('inp-cash').value = '';
+            document.getElementById('inp-atm').value = '';
+            document.getElementById('inp-eat').value = '';
+            document.getElementById('inp-withdraw').value = '';
+            calculateRealtime();
+
+            // Bật thông báo
+            const toast = document.getElementById('toast-banner');
+            toast.classList.remove('opacity-0');
+            setTimeout(() => toast.classList.add('opacity-0'), 2500);
+        }
+
+        // Render Sổ Thu Chi
+        function renderHistory() {
+            const list = document.getElementById('history-list');
+            const weekSum = state.history.slice(0, 7).reduce((acc, item) => acc + item.netProfit, 0);
+            const monthSum = state.history.reduce((acc, item) => acc + item.netProfit, 0);
+
+            document.getElementById('stat-week').innerText = formatMoney(weekSum);
+            document.getElementById('stat-month').innerText = formatMoney(monthSum);
+            document.getElementById('stat-count').innerText = `${state.history.length} ngày chốt`;
+
+            if(state.history.length === 0) {
+                list.innerHTML = `<p class="py-6 text-center text-xs text-[#94A3B8]">Chưa có lịch sử chốt ca nào.</p>`;
+                return;
+            }
+
+            let html = '';
+            state.history.forEach(item => {
+                const isPos = item.netProfit >= 0;
+                html += `
+                    <div class="py-3 flex items-center justify-between gap-2">
+                        <div>
+                            <p class="text-sm font-semibold">Ngày ${item.date}</p>
+                            <span class="text-[11px] text-[#94A3B8]">Chốt ca thành công</span>
+                        </div>
+                        <span class="text-sm font-bold ${isPos ? 'text-[#2DD4BF]' : 'text-rose-500'}">${formatMoney(item.netProfit, true)}</span>
+                    </div>
+                `;
+            });
+            list.innerHTML = html;
+        }
+
+        // Cập nhật cài đặt
+        function saveSettings() {
+            state.yesterday.app = Number(document.getElementById('set-yesterday-app').value) || 0;
+            state.yesterday.cash = Number(document.getElementById('set-yesterday-cash').value) || 0;
+            state.yesterday.atm = Number(document.getElementById('set-yesterday-atm').value) || 0;
+            state.fixedCost = Number(document.getElementById('set-fixed-cost').value) || 45;
+            calculateRealtime();
+        }
+
+        // Khôi phục gốc
+        function resetData() {
+            document.getElementById('set-yesterday-app').value = 200;
+            document.getElementById('set-yesterday-cash').value = 250;
+            document.getElementById('set-yesterday-atm').value = 550;
+            document.getElementById('set-fixed-cost').value = 45;
+            state.yesterday = { app: 200, cash: 250, atm: 550 };
+            state.history = [];
+            ['inp-app', 'inp-cash', 'inp-atm', 'inp-eat', 'inp-withdraw'].forEach(id => document.getElementById(id).value = '');
+            calculateRealtime();
+        }
+    </script>
+</body>
+</html>
